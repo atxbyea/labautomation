@@ -1,0 +1,37 @@
+---
+
+- name: "Change VLANs in Lab"
+  hosts: switches
+  gather_facts: no
+  connection: ansible.netcommon.network_cli
+  vars:
+
+  ### 2601-2700 for vSphere,2701-2800 for Kubernetes, 2801-2900 for  
+    vlanrange: 2600-2700
+    labname: vsphere
+
+  tasks:
+
+
+### Lets 
+
+    - name: Change VLANs
+      cisco.ios.ios_config:
+        lines:
+          - switchport trunk encapsulation dot1q
+          - switchport mode trunk
+          - "switchport trunk allowed vlan {{vlanrange}}"
+          - "description Trunk ports towards {{labname}}"
+          - spanning-tree portfast
+
+        parents: "{{ item }}"
+      with_items:
+        - interface GigabitEthernet0/6
+        - interface GigabitEthernet0/7
+        - interface GigabitEthernet0/8
+        - interface GigabitEthernet0/9
+        - interface GigabitEthernet0/10
+
+    - name: Save running config when changed
+      cisco.ios.ios_config:
+        save_when: always
